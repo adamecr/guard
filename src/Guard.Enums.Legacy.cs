@@ -479,11 +479,11 @@
                 {
                     result = new EnumArgumentInfo<T>(
                         new ArgumentInfo<T>(
+                            this.Argument.Scope,
                             this.Argument.Value.Value,
                             this.Argument.Name,
                             this.Argument.Modified,
-                            this.Argument.Secure,
-                            this.Argument.ExceptionInterceptor));
+                            this.Argument.Secure));
 
                     return true;
                 }

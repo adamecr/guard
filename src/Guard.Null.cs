@@ -132,7 +132,7 @@
             }
 
             return new ArgumentInfo<T>(
-                argument.Value.Value, argument.Name, argument.Modified, argument.Secure,argument.ExceptionInterceptor);
+                argument.Scope,argument.Value.Value, argument.Name, argument.Modified, argument.Secure);
         }
 
         /// <summary>
@@ -157,7 +157,7 @@
             if (argument.HasValue())
             {
                 result = new ArgumentInfo<T>(
-                    argument.Value.Value, argument.Name, argument.Modified, argument.Secure,argument.ExceptionInterceptor);
+                    argument.Scope,argument.Value.Value, argument.Name, argument.Modified, argument.Secure);
 
                 return true;
             }

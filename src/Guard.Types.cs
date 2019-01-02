@@ -38,7 +38,7 @@
             }
 
             return new ArgumentInfo<T>(
-                (T)argument.Value, argument.Name, argument.Modified, argument.Secure,argument.ExceptionInterceptor);
+                argument.Scope,(T)argument.Value, argument.Name, argument.Modified, argument.Secure);
         }
 
         /// <summary>
@@ -213,7 +213,7 @@
             public ArgumentInfo<TTarget> Cast<TTarget>(Func<T, string> message = null)
             {
                 if (this.Value is TTarget value)
-                    return new ArgumentInfo<TTarget>(value, this.Name, this.Modified, this.Secure,this.ExceptionInterceptor);
+                    return new ArgumentInfo<TTarget>(this.Scope,value, this.Name, this.Modified, this.Secure);
 
                 var m = message?.Invoke(this.Value) ?? Messages.Compatible<T, TTarget>(this);
                 throw this.Exception(new ArgumentException(m, this.Name));

@@ -1,4 +1,6 @@
-﻿namespace Dawn
+﻿using Dawn.Scope;
+
+namespace Dawn
 {
     using System;
     using System.Diagnostics;
@@ -13,7 +15,7 @@
     {
         /// <summary>
         ///     Returns an object that can be used to assert preconditions for the method argument
-        ///     with the specified name and value.
+        ///     with the specified name and value in a root scope.
         /// </summary>
         /// <typeparam name="T">The type of the method argument.</typeparam>
         /// <param name="value">The value of the method argument.</param>
@@ -37,10 +39,10 @@
         [GuardFunction("Initialization", "ga", order: 1)]
         public static ArgumentInfo<T> Argument<T>(
             T value, [InvokerParameterName] string name = null, bool secure = false, Action<Exception> exceptionInterceptor = null)
-            => new ArgumentInfo<T>(value, name, secure: secure, exceptionInterceptor: exceptionInterceptor);
+            => new ArgumentInfo<T>(value, name, secure: secure);
 
         /// <summary>
-        ///     Returns an object that can be used to assert preconditions for the specified method argument.
+        ///     Returns an object that can be used to assert preconditions for the specified method argument in a root scope.
         /// </summary>
         /// <typeparam name="T">The type of the method argument.</typeparam>
         /// <param name="e">An expression that specifies a method argument.</param>
@@ -78,7 +80,7 @@
             private readonly string name;
 
             /// <summary>
-            ///     Initializes a new instance of the <see cref="ArgumentInfo{T} " /> struct.
+            ///     Initializes a new instance of the <see cref="ArgumentInfo{T} " /> struct in a root scope.
             /// </summary>
             /// <param name="value">The value of the method argument.</param>
             /// <param name="name">The name of the method argument.</param>
@@ -90,20 +92,48 @@
             ///     Pass <c>true</c> for the validation parameters to be excluded from the exception
             ///     messages of failed validations.
             /// </param>
-            /// <param name="exceptionInterceptor">Optional interceptor that can process the exception just before it's thrown</param>
             [DebuggerStepThrough]
             public ArgumentInfo(
                 T value,
                 [InvokerParameterName] string name,
                 bool modified = false,
-                bool secure = false,
-                Action<Exception> exceptionInterceptor = null)
+                bool secure = false)
             {
                 this.Value = value;
                 this.name = name;
                 this.Modified = modified;
                 this.Secure = secure;
-                this.ExceptionInterceptor = exceptionInterceptor;
+                this.Scope = GuardScope.Root;
+            }
+
+            /// <summary>
+            ///     Initializes a new instance of the <see cref="ArgumentInfo{T} " /> struct in given <paramref name="scope"/>.
+            /// </summary>
+            /// <param name="scope">Scope the <see cref="ArgumentInfo{T} " /> belongs to.</param>
+            /// <param name="value">The value of the method argument.</param>
+            /// <param name="name">The name of the method argument.</param>
+            /// <param name="modified">
+            ///     Whether the original method argument is modified before the initialization of
+            ///     this instance.
+            /// </param>
+            /// <param name="secure">
+            ///     Pass <c>true</c> for the validation parameters to be excluded from the exception
+            ///     messages of failed validations.
+            /// </param>
+            /// <exception cref="ArgumentException"><paramref name="scope"/> is null.</exception>
+            public ArgumentInfo(
+                IGuardScope scope,
+                T value,
+                [InvokerParameterName] string name,
+                bool modified = false,
+                bool secure = false
+                )
+            {
+                this.Value = value;
+                this.name = name;
+                this.Modified = modified;
+                this.Secure = secure;
+                this.Scope = scope??throw new ArgumentNullException(nameof(scope));
             }
 
             /// <summary>Gets the argument value.</summary>
@@ -126,9 +156,15 @@
             public bool Secure { get; }
 
             /// <summary>
-            ///  Gets an exception handler used just before the exception is thrown
+            ///  Gets an exception interceptor for current scope
             /// </summary>
-            public Action<Exception> ExceptionInterceptor { get; }
+            public Action<Exception> ExceptionInterceptor => this.Scope.ExceptionInterceptor;
+
+
+            /// <summary>
+            ///  Gets the current scope.
+            /// </summary>
+            public IGuardScope Scope { get; }
 
             /// <summary>
             /// Processes the exception before it's thrown - <see cref="ExceptionInterceptor"/> is invoked when available.
